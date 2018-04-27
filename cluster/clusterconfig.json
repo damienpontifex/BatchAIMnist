@@ -1,0 +1,7 @@
+{
+  "$schema":
+    "https://raw.githubusercontent.com/Azure/BatchAI/master/schemas/2018-03-01/cluster.json",
+  "properties": {
+    "vmPriority": "lowpriority"
+  }
+}
