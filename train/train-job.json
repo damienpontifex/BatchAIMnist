@@ -1,17 +1,13 @@
 {
-  "$schema":
-    "https://raw.githubusercontent.com/Azure/BatchAI/schema/schemas/2017-09-01-preview/job.json",
+  "$schema": "https://raw.githubusercontent.com/Azure/BatchAI/schema/schemas/2017-09-01-preview/job.json",
   "properties": {
     "experimentName": "MNIST Train",
     "nodeCount": 3,
     "tensorFlowSettings": {
       "pythonScriptFilePath": "$AZ_BATCHAI_INPUT_SCRIPT/mnist.py",
-      "masterCommandLineArgs":
-        "--data-directory $AZ_BATCHAI_INPUT_DATA --model-directory $AZ_BATCHAI_MOUNT_ROOT/bfs/mnist/model",
-      "workerCommandLineArgs":
-        "--data-directory $AZ_BATCHAI_INPUT_DATA --model-directory $AZ_BATCHAI_MOUNT_ROOT/bfs/mnist/model",
-      "parameterServerCommandLineArgs":
-        "--data-directory $AZ_BATCHAI_INPUT_DATA --model-directory $AZ_BATCHAI_MOUNT_ROOT/bfs/mnist/model"
+      "masterCommandLineArgs": "--data_directory $AZ_BATCHAI_INPUT_DATA --model_directory $AZ_BATCHAI_MOUNT_ROOT/bfs/mnist/model",
+      "workerCommandLineArgs": "--data_directory $AZ_BATCHAI_INPUT_DATA --model_directory $AZ_BATCHAI_MOUNT_ROOT/bfs/mnist/model",
+      "parameterServerCommandLineArgs": "--data_directory $AZ_BATCHAI_INPUT_DATA --model_directory $AZ_BATCHAI_MOUNT_ROOT/bfs/mnist/model"
     },
     "stdOutErrPathPrefix": "$AZ_BATCHAI_MOUNT_ROOT/bfs/mnist/stderr",
     "inputDirectories": [

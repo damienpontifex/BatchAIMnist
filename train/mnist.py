@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """MNIST CNN Network"""
 
 from argparse import ArgumentParser
@@ -8,43 +9,48 @@ import model
 import data
 import json
 
+tf.app.flags.DEFINE_string('data_directory', '',
+                           'Directory where TFRecords are stored')
+tf.app.flags.DEFINE_string('model_directory', '',
+                           'Directory where model summaries and checkpoints are stored')
+tf.app.flags.DEFINE_float('learning_rate', 0.4)
+tf.app.flags.DEFINE_integer('batch_size', 1024)
+tf.app.flags.DEFINE_integer('max_steps', 400)
 
-def run(data_directory, model_directory):
+FLAGS = tf.app.flags.FLAGS
+
+
+def main(_):
     """Run training and evaluation
     Arguments:
         data_directory: directory where data is located
         model_directory: output directory where model and checkpoints will be placed
     """
 
-    run_config = tf.estimator.RunConfig(
-        save_checkpoints_steps=20,
-        save_summary_steps=20,
-    )
+    run_config = tf.estimator.RunConfig()
 
     hparams = {
-        'learning_rate': 1e-3,
+        'learning_rate': FLAGS.learning_rate,
         'dropout_rate': 0.4,
-        'data_directory': data_directory
+        'data_directory': FLAGS.data_directory
     }
 
     mnist_classifier = tf.estimator.Estimator(
         model_fn=model.head_model_fn,
-        model_dir=model_directory,
+        model_dir=FLAGS.model_directory,
         config=run_config,
         params=hparams
     )
 
-    train_batch_size = 1024
-
-    train_files = os.path.join(data_directory, 'train-*.tfrecords')
+    train_files = os.path.join(FLAGS.data_directory, 'train-*.tfrecords')
     train_input_fn = data.data_input_fn(
-        train_files, batch_size=train_batch_size)
-    train_spec = tf.estimator.TrainSpec(input_fn=train_input_fn, max_steps=400)
+        train_files, batch_size=FLAGS.batch_size)
+    train_spec = tf.estimator.TrainSpec(
+        input_fn=train_input_fn, max_steps=FLAGS.max_steps)
 
-    eval_files = os.path.join(data_directory, 'validation.tfrecords')
+    eval_files = os.path.join(FLAGS.data_directory, 'validation.tfrecords')
     eval_input_fn = data.data_input_fn(eval_files, batch_size=1)
-    eval_spec = tf.estimator.EvalSpec(
-        input_fn=eval_input_fn, start_delay_secs=60)
+    eval_spec = tf.estimator.EvalSpec(eval_input_fn)
 
     tf.estimator.train_and_evaluate(mnist_classifier, train_spec, eval_spec)
 
@@ -57,21 +63,10 @@ def run(data_directory, model_directory):
 
 
 if __name__ == '__main__':
+    if 'TF_CONFIG' in os.environ:
+        tf_config = os.environ['TF_CONFIG']
+        tf_config_json = json.loads(tf_config)
+        tf.logging.info('TF_CONFIG Environment value:')
+        tf.logging.info(json.dumps(tf_config_json, indent=4))
 
-    PARSER = ArgumentParser()
-    PARSER.add_argument(
-        "--data-directory",
-        help='Directory where TFRecords are stored'
-    )
-    PARSER.add_argument(
-        '--model-directory',
-        help='Directory where model summaries and checkpoints are stored'
-    )
-    ARGS = PARSER.parse_args()
-
-    tf.logging.set_verbosity(tf.logging.INFO)
-
-    tf.logging.info('Environment variables')
-    tf.logging.info(json.dumps(dict(os.environ), indent=4))
-
-    run(**vars(ARGS))
+    tf.app.run()

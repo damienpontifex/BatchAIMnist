@@ -1,7 +1,6 @@
-#! /usr/env/bin python3
+#!/usr/bin/env python3
 
 """Convert MNIST Dataset to local TFRecords"""
-
 import argparse
 import os
 import sys
@@ -9,6 +8,10 @@ import json
 import numpy as np
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
+
+tf.app.flags.DEFINE_string(
+    'data_directory', '', 'Directory where TFRecords will be stored')
+FLAGS = tf.app.flags.FLAGS
 
 
 def _data_path(data_directory: str, name: str) -> str:
@@ -95,7 +98,7 @@ def convert_to(data_set, name: str, data_directory: str, num_shards: int=1):
                 data_directory, '{}-{}'.format(name, shard + 1)))
 
 
-def convert_to_tf_record(data_directory: str):
+def convert_to_tf_record(_):
     """Convert the TF MNIST Dataset to TFRecord formats
 
     Args:
@@ -107,21 +110,15 @@ def convert_to_tf_record(data_directory: str):
         reshape=False
     )
 
-    convert_to(mnist.validation, 'validation', data_directory)
-    convert_to(mnist.train, 'train', data_directory, num_shards=10)
-    convert_to(mnist.test, 'test', data_directory)
+    convert_to(mnist.validation, 'validation', FLAGS.data_directory)
+    convert_to(mnist.train, 'train', FLAGS.data_directory, num_shards=10)
+    convert_to(mnist.test, 'test', FLAGS.data_directory)
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
+    if 'TF_CONFIG' in os.environ:
+        tf_config = os.environ['TF_CONFIG']
+        tf_config_json = json.loads(tf_config)
+        print(json.dumps(tf_config_json, indent=4))
 
-    parser.add_argument(
-        '--data-directory',
-        default='~/data/mnist',
-        help='Directory where TFRecords will be stored')
-
-    tf.logging.info('Environment variables')
-    tf.logging.info(json.dumps(dict(os.environ), indent=4))
-
-    args = parser.parse_args()
-    convert_to_tf_record(os.path.expanduser(args.data_directory))
+    tf.app.run(main=convert_to_tf_record)
