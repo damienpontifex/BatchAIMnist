@@ -5,6 +5,7 @@ from argparse import ArgumentParser
 import os
 import json
 import tensorflow as tf
+from tensorflow.python import debug as tf_debug
 import model
 import data
 import json
@@ -13,9 +14,10 @@ tf.app.flags.DEFINE_string('data_directory', '',
                            'Directory where TFRecords are stored')
 tf.app.flags.DEFINE_string('model_directory', '',
                            'Directory where model summaries and checkpoints are stored')
-tf.app.flags.DEFINE_float('learning_rate', 0.4)
-tf.app.flags.DEFINE_integer('batch_size', 1024)
-tf.app.flags.DEFINE_integer('max_steps', 400)
+tf.app.flags.DEFINE_float('learning_rate', 0.4, '')
+tf.app.flags.DEFINE_integer('batch_size', 1024, '')
+tf.app.flags.DEFINE_integer('max_steps', 400, '')
+tf.app.flags.DEFINE_bool('debug', False, '')
 
 FLAGS = tf.app.flags.FLAGS
 
@@ -42,11 +44,15 @@ def main(_):
         params=hparams
     )
 
+    debug_hook = tf_debug.TensorBoardDebugHook("localhost:2333")
+
+    hooks = [debug_hook] if FLAGS.debug else []
+
     train_files = os.path.join(FLAGS.data_directory, 'train-*.tfrecords')
     train_input_fn = data.data_input_fn(
         train_files, batch_size=FLAGS.batch_size)
     train_spec = tf.estimator.TrainSpec(
-        input_fn=train_input_fn, max_steps=FLAGS.max_steps)
+        input_fn=train_input_fn, max_steps=FLAGS.max_steps, hooks=hooks)
 
     eval_files = os.path.join(FLAGS.data_directory, 'validation.tfrecords')
     eval_input_fn = data.data_input_fn(eval_files, batch_size=1)
