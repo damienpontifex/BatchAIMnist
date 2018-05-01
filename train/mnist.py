@@ -29,6 +29,8 @@ def main(_):
         model_directory: output directory where model and checkpoints will be placed
     """
 
+    tf.logging.set_verbosity(tf.logging.INFO)
+
     run_config = tf.estimator.RunConfig()
 
     hparams = {
@@ -49,13 +51,13 @@ def main(_):
     hooks = [debug_hook] if FLAGS.debug else []
 
     train_files = os.path.join(FLAGS.data_directory, 'train-*.tfrecords')
-    train_input_fn = data.data_input_fn(
+    train_input_fn = data.data_input_fn2(
         train_files, batch_size=FLAGS.batch_size)
     train_spec = tf.estimator.TrainSpec(
         input_fn=train_input_fn, max_steps=FLAGS.max_steps, hooks=hooks)
 
     eval_files = os.path.join(FLAGS.data_directory, 'validation.tfrecords')
-    eval_input_fn = data.data_input_fn(eval_files, batch_size=1)
+    eval_input_fn = data.data_input_fn2(eval_files, batch_size=1)
     eval_spec = tf.estimator.EvalSpec(eval_input_fn)
 
     tf.estimator.train_and_evaluate(mnist_classifier, train_spec, eval_spec)
