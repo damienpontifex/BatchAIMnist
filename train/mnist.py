@@ -17,16 +17,29 @@ tf.app.flags.DEFINE_string('model_directory', '',
 tf.app.flags.DEFINE_float('learning_rate', 0.4, '')
 tf.app.flags.DEFINE_integer('batch_size', 1024, '')
 tf.app.flags.DEFINE_integer('max_steps', 400, '')
-tf.app.flags.DEFINE_bool('debug', False, '')
+tf.app.flags.DEFINE_integer('debug_port', None, '')
 
 FLAGS = tf.app.flags.FLAGS
 
 
+def get_train_spec(hooks):
+    train_files = os.path.join(FLAGS.data_directory, 'train-*.tfrecords')
+    train_input_fn = data.data_input_fn2(
+        train_files, batch_size=FLAGS.batch_size)
+    train_spec = tf.estimator.TrainSpec(
+        input_fn=train_input_fn, max_steps=FLAGS.max_steps, hooks=hooks)
+    return train_spec
+
+
+def get_eval_spec():
+    eval_files = os.path.join(FLAGS.data_directory, 'validation.tfrecords')
+    eval_input_fn = data.data_input_fn2(eval_files, batch_size=1)
+    eval_spec = tf.estimator.EvalSpec(eval_input_fn)
+    return eval_spec
+
+
 def main(_):
     """Run training and evaluation
-    Arguments:
-        data_directory: directory where data is located
-        model_directory: output directory where model and checkpoints will be placed
     """
 
     tf.logging.set_verbosity(tf.logging.INFO)
@@ -46,21 +59,15 @@ def main(_):
         params=hparams
     )
 
-    debug_hook = tf_debug.TensorBoardDebugHook("localhost:2333")
+    hooks = []
 
-    hooks = [debug_hook] if FLAGS.debug else []
+    if FLAGS.debug_port is not None:
+        debug_hook = tf_debug.TensorBoardDebugHook(
+            "localhost:{}".format(FLAGS.debug_port))
+        hooks.append(debug_hook)
 
-    train_files = os.path.join(FLAGS.data_directory, 'train-*.tfrecords')
-    train_input_fn = data.data_input_fn2(
-        train_files, batch_size=FLAGS.batch_size)
-    train_spec = tf.estimator.TrainSpec(
-        input_fn=train_input_fn, max_steps=FLAGS.max_steps, hooks=hooks)
-
-    eval_files = os.path.join(FLAGS.data_directory, 'validation.tfrecords')
-    eval_input_fn = data.data_input_fn2(eval_files, batch_size=1)
-    eval_spec = tf.estimator.EvalSpec(eval_input_fn)
-
-    tf.estimator.train_and_evaluate(mnist_classifier, train_spec, eval_spec)
+    tf.estimator.train_and_evaluate(
+        mnist_classifier, get_train_spec(hooks), get_eval_spec())
 
     # Export for serving
     # serving_input_receiver_fn = tf.estimator.export.build_parsing_serving_input_receiver_fn(data.get_feature_columns(with_label=False))
