@@ -11,9 +11,9 @@ import data
 import json
 
 tf.app.flags.DEFINE_string('data_directory', '',
-                           'Directory where TFRecords are stored')
+                           'Directory where TFRecords are stored, Use a scheme like azs://<storage-account>/<container>/path for azure storage')
 tf.app.flags.DEFINE_string('model_directory', '',
-                           'Directory where model summaries and checkpoints are stored')
+                           'Directory where model summaries and checkpoints are stored, Use a scheme like azs://<storage-account>/<container>/path for azure storage')
 tf.app.flags.DEFINE_float('learning_rate', 0.4, '')
 tf.app.flags.DEFINE_integer('batch_size', 1024, '')
 tf.app.flags.DEFINE_integer('max_steps', 400, '')
