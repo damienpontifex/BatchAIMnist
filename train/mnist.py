@@ -78,6 +78,13 @@ def main(_):
 
 
 if __name__ == '__main__':
+    tf.load_file_system_library(os.path.expanduser('~/developer/tensorflow/bazel-bin/tensorflow/contrib/azure/azs_file_system.so')
+    if not 'AZURE_TF_STORAGE_KEY' in os.environ:
+        raise ValueError('Missing AZURE_TF_STORAGE_KEY from environment variable')
+    
+    print('Debug Process', os.getpid(), 'Press enter to continue')
+    input()
+
     if 'TF_CONFIG' in os.environ:
         tf_config = os.environ['TF_CONFIG']
         tf_config_json = json.loads(tf_config)
